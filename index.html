@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AC Compressor Control Valve - Precision Kinematics & Thermodynamic Simulation</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-dark min-h-screen flex flex-col">
+
+  <!-- TOP HEADER & CONTROLS -->
+  <header class="bg-slate-900/95 border-b border-slate-800 px-4 py-3 sticky top-0 z-40 backdrop-blur-md">
+    <div class="max-w-[1780px] mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-cyan-500/30 text-cyan-400">
+          <i data-lucide="gauge" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base md:text-lg font-bold tracking-tight text-white">
+              Internal Structure of AC Compressor Control Valve
+            </h1>
+            <span class="px-2 py-0.5 text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full">
+              HIGH-ACCURACY KINEMATICS
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">
+            Swashplate Wobble-Plate Kinematics, Reed Valve Timing, ECV Gating & PV Thermodynamic Cycle
+          </p>
+        </div>
+      </div>
+
+      <!-- State & Mode Selectors -->
+      <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <button id="btn-mode-state1" class="mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5 active">
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+          <span>(1) Valve Open (Destroked 5%)</span>
+        </button>
+        <button id="btn-mode-state2" class="mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+          <span>(2) Valve Closed (Full Stroke 100%)</span>
+        </button>
+        <button id="btn-mode-pwm" class="mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5">
+          <i data-lucide="sliders" class="w-3.5 h-3.5 text-purple-400"></i>
+          <span>Dynamic PWM Slider</span>
+        </button>
+        <button id="btn-mode-autocycle" class="mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span>Auto Cycle Demo</span>
+        </button>
+      </div>
+
+      <!-- Audio Narration Controls & Utilities -->
+      <div class="flex items-center gap-2">
+        <!-- Spoken Voice Narration Player -->
+        <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+          <button id="btn-voice-narrate" class="flex items-center gap-2 text-xs font-bold text-cyan-300 hover:text-cyan-200 transition-colors">
+            <i data-lucide="volume-2" id="icon-voice" class="w-4 h-4 text-cyan-400"></i>
+            <span id="label-voice">Start Audio Walkthrough</span>
+          </button>
+          <div class="flex items-center gap-0.5 h-4 px-1" id="voice-waveform">
+            <span class="audio-bar paused"></span>
+            <span class="audio-bar paused"></span>
+            <span class="audio-bar paused"></span>
+            <span class="audio-bar paused"></span>
+            <span class="audio-bar paused"></span>
+            <span class="audio-bar paused"></span>
+          </div>
+        </div>
+
+        <!-- Sound FX Synth Toggle -->
+        <button id="btn-soundfx" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors border border-slate-700" title="Toggle Mechanical Audio Synthesizer">
+          <i data-lucide="music" id="icon-soundfx" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Quiz Modal Trigger -->
+        <button id="btn-open-quiz" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/20 flex items-center gap-1.5">
+          <i data-lucide="help-circle" class="w-4 h-4"></i>
+          <span>Mastery Quiz</span>
+        </button>
+
+        <!-- Theme Selector -->
+        <div class="relative">
+          <button id="btn-theme" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" title="Switch Theme">
+            <i data-lucide="palette" class="w-4 h-4"></i>
+          </button>
+          <div id="theme-dropdown" class="hidden absolute right-0 mt-2 w-36 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl py-1 z-50 text-xs">
+            <button data-theme="dark" class="w-full text-left px-3 py-2 text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-slate-950 border border-slate-600"></span> Dark SCADA
+            </button>
+            <button data-theme="blueprint" class="w-full text-left px-3 py-2 text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-900 border border-sky-400"></span> Blueprint
+            </button>
+            <button data-theme="light" class="w-full text-left px-3 py-2 text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-slate-100 border border-slate-300"></span> Clean Light
+            </button>
+          </div>
+        </div>
+
+        <!-- Export Diagram -->
+        <button id="btn-export-svg" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" title="Export Vector Schematic">
+          <i data-lucide="download" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT GRID -->
+  <main class="flex-1 max-w-[1780px] w-full mx-auto grid grid-cols-1 xl:grid-cols-12 gap-4 p-4 items-start">
+    
+    <!-- LEFT & CENTER: HIGH-DEFINITION DUAL-PANEL SCHEMATIC (8.5 Cols) -->
+    <section class="xl:col-span-8 flex flex-col gap-3">
+      
+      <!-- Primary Canvas Wrapper -->
+      <div id="simulation-wrapper" class="relative glass-panel rounded-2xl overflow-hidden border border-slate-800 bg-slate-950/95 shadow-2xl">
+        
+        <!-- Live Status Overlay Badge -->
+        <div class="absolute top-3 left-3 z-20 flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-800">
+          <span id="badge-status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="badge-status-text" class="text-xs font-mono font-bold text-slate-200 uppercase">
+            STATE (1): ECV OPEN (DESTROKED 5%)
+          </span>
+        </div>
+
+        <!-- Viewport Controls (Speed, Play/Pause) -->
+        <div class="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md p-1 rounded-xl border border-slate-800">
+          <button id="btn-sim-playpause" class="p-1.5 rounded-lg hover:bg-slate-800 text-cyan-400" title="Play / Pause Mechanical Kinematics">
+            <i data-lucide="pause" id="icon-sim-playpause" class="w-4 h-4"></i>
+          </button>
+          <div class="h-4 w-px bg-slate-800 mx-0.5"></div>
+          <button data-speed="0.5" class="speed-btn px-2 py-0.5 rounded text-[11px] font-mono text-slate-400 hover:text-white">0.5x</button>
+          <button data-speed="1.0" class="speed-btn px-2 py-0.5 rounded text-[11px] font-mono bg-cyan-600 text-white font-bold">1x</button>
+          <button data-speed="2.0" class="speed-btn px-2 py-0.5 rounded text-[11px] font-mono text-slate-400 hover:text-white">2x</button>
+        </div>
+
+        <!-- Master SVG Mechanical Vector Schematic (Side-by-Side: Compressor + ECV Inset) -->
+        <div id="svg-container" class="relative w-full aspect-[1480/720]">
+          <svg id="compressor-svg" viewBox="0 0 1480 720" class="w-full h-full select-none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <!-- Metallic Gradients -->
+              <linearGradient id="metal-casing" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#475569" />
+                <stop offset="50%" stop-color="#334155" />
+                <stop offset="100%" stop-color="#1e293b" />
+              </linearGradient>
+              <linearGradient id="shaft-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#cbd5e1" />
+                <stop offset="50%" stop-color="#94a3b8" />
+                <stop offset="100%" stop-color="#64748b" />
+              </linearGradient>
+              <linearGradient id="piston-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f8fafc" />
+                <stop offset="35%" stop-color="#cbd5e1" />
+                <stop offset="70%" stop-color="#94a3b8" />
+                <stop offset="100%" stop-color="#64748b" />
+              </linearGradient>
+              <linearGradient id="swashplate-grad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f1f5f9" />
+                <stop offset="50%" stop-color="#94a3b8" />
+                <stop offset="100%" stop-color="#475569" />
+              </linearGradient>
+              <linearGradient id="copper-coil" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#b45309" />
+                <stop offset="50%" stop-color="#f59e0b" />
+                <stop offset="100%" stop-color="#b45309" />
+              </linearGradient>
+            </defs>
+
+            <!-- ============================================================ -->
+            <!-- SECTION A: MAIN COMPRESSOR CROSS-SECTION (LEFT 1000px)       -->
+            <!-- ============================================================ -->
+
+            <!-- State Index Indicator Circle -->
+            <g id="state-indicator-badge">
+              <circle cx="55" cy="55" r="24" fill="#0f172a" stroke="#38bdf8" stroke-width="2.5" />
+              <text id="state-badge-num" x="55" y="63" text-anchor="middle" class="fill-sky-400 font-black text-xl font-mono">1</text>
+            </g>
+
+            <!-- Main Compressor Outer Cast Casing -->
+            <rect x="40" y="90" width="940" height="550" rx="16" fill="url(#metal-casing)" stroke="#64748b" stroke-width="4" />
+
+            <!-- Crankcase Chamber Cavity (Pc Blue) -->
+            <path id="crankcase-bg" d="M 60 110 L 620 110 L 620 620 L 60 620 Z" fill="#38bdf8" fill-opacity="0.22" stroke="#0284c7" stroke-width="1.5" />
+            <text x="80" y="140" class="fill-sky-400 font-mono text-xs font-bold tracking-wider">CRANKCASE (Pc)</text>
+
+            <!-- Cylinder Head Bulkhead Wall -->
+            <rect x="620" y="110" width="160" height="510" fill="#1e293b" stroke="#475569" stroke-width="2" />
+            <text x="700" y="365" text-anchor="middle" class="fill-slate-400 font-bold text-sm">Cylinder head</text>
+
+            <!-- Top Cylinder Bore & Dynamic In-Cylinder Compression Cavity -->
+            <rect x="300" y="130" width="320" height="110" fill="#0f172a" stroke="#334155" stroke-width="2" rx="4" />
+            <rect id="comp-chamber-top" x="520" y="132" width="100" height="106" fill="#ef4444" fill-opacity="0.3" />
+
+            <!-- Bottom Cylinder Bore & Dynamic In-Cylinder Compression Cavity -->
+            <rect x="300" y="490" width="320" height="110" fill="#0f172a" stroke="#334155" stroke-width="2" rx="4" />
+            <rect id="comp-chamber-bottom" x="520" y="492" width="100" height="106" fill="#ef4444" fill-opacity="0.65" />
+
+            <!-- VALVE PLATE & ANIMATED REED VALVES -->
+            <!-- Top Cylinder Reed Valves -->
+            <g id="reed-valves-top" transform="translate(620, 130)">
+              <!-- Valve Plate Wall -->
+              <line x1="0" y1="0" x2="0" y2="110" stroke="#94a3b8" stroke-width="4" />
+              <!-- Suction Port & Suction Reed -->
+              <circle cx="0" cy="30" r="6" fill="#0284c7" />
+              <line id="reed-suc-top" x1="0" y1="30" x2="-18" y2="30" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+              <!-- Discharge Port & Discharge Reed -->
+              <circle cx="0" cy="80" r="6" fill="#ef4444" />
+              <line id="reed-dis-top" x1="0" y1="80" x2="18" y2="80" stroke="#f87171" stroke-width="3" stroke-linecap="round" />
+            </g>
+
+            <!-- Bottom Cylinder Reed Valves -->
+            <g id="reed-valves-bottom" transform="translate(620, 490)">
+              <line x1="0" y1="0" x2="0" y2="110" stroke="#94a3b8" stroke-width="4" />
+              <!-- Suction Port & Suction Reed -->
+              <circle cx="0" cy="80" r="6" fill="#0284c7" />
+              <line id="reed-suc-bot" x1="0" y1="80" x2="-18" y2="80" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+              <!-- Discharge Port & Discharge Reed -->
+              <circle cx="0" cy="30" r="6" fill="#ef4444" />
+              <line id="reed-dis-bot" x1="0" y1="30" x2="18" y2="30" stroke="#f87171" stroke-width="3" stroke-linecap="round" />
+            </g>
+
+            <!-- FLUID PASSAGES & MANIFOLDS (Compressor) -->
+            <!-- 1. Upper Crankcase Passage (Horizontal Conduit connecting to ECV) -->
+            <rect id="upper-passage-bg" x="300" y="270" width="480" height="42" fill="#38bdf8" fill-opacity="0.35" stroke="#0284c7" stroke-width="2" />
+            
+            <!-- Dynamic Flow Arrows inside Upper Passage -->
+            <g id="arrows-upper-passage">
+              <polygon id="up-arr-1" points="360,291 380,284 380,298" fill="#38bdf8" class="flow-anim-right" />
+              <polygon id="up-arr-2" points="480,291 500,284 500,298" fill="#38bdf8" class="flow-anim-right" />
+              <polygon id="up-arr-3" points="600,291 620,284 620,298" fill="#38bdf8" class="flow-anim-right" />
+            </g>
+
+            <!-- 2. Suction Manifold & Port (Bottom Right) -->
+            <g id="port-suction" class="interactive-part" data-part="suction-port">
+              <rect x="680" y="525" width="140" height="55" fill="#0284c7" fill-opacity="0.35" stroke="#38bdf8" stroke-width="2" />
+              <rect x="820" y="535" width="60" height="35" fill="#0284c7" fill-opacity="0.5" stroke="#38bdf8" stroke-width="2" />
+              <!-- External Suction Line & Arrow -->
+              <path d="M 940 552 L 880 552" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" />
+              <polygon points="885,545 870,552 885,559" fill="#38bdf8" />
+              <text x="948" y="557" class="fill-sky-400 font-bold text-sm">Suction</text>
+              <!-- Internal Intake Arrow -->
+              <polygon id="suc-arr-1" points="670,552 650,545 650,559" fill="#38bdf8" class="flow-anim-left" />
+              <polygon id="suc-arr-2" points="500,552 480,545 480,559" fill="#38bdf8" class="flow-anim-left" />
+            </g>
+
+            <!-- 3. Discharge Manifold & Port (Middle Right) -->
+            <g id="port-discharge" class="interactive-part" data-part="discharge-port">
+              <rect x="680" y="435" width="140" height="55" fill="#ef4444" fill-opacity="0.35" stroke="#f87171" stroke-width="2" />
+              <rect x="820" y="445" width="60" height="35" fill="#ef4444" fill-opacity="0.5" stroke="#f87171" stroke-width="2" />
+              <!-- External Discharge Line & Arrow -->
+              <path d="M 880 462 L 940 462" stroke="#ef4444" stroke-width="5" stroke-linecap="round" />
+              <polygon points="935,455 950,462 935,469" fill="#ef4444" />
+              <text x="958" y="467" class="fill-rose-400 font-bold text-sm">Discharge</text>
+              <!-- Internal Discharge Arrow -->
+              <polygon id="dis-arr-1" points="750,462 770,455 770,469" fill="#ef4444" class="flow-anim-right" />
+            </g>
+
+            <!-- 4. Vertical Discharge Channel to ECV -->
+            <path d="M 720 435 L 720 340 L 830 340 L 830 312 L 780 312" fill="none" stroke="#ef4444" stroke-width="22" stroke-linecap="square" opacity="0.6" />
+            <path d="M 720 435 L 720 340 L 830 340 L 830 312 L 780 312" fill="none" stroke="#f87171" stroke-width="2" />
+
+            <!-- DRIVE SHAFT & DUAL OPPOSING HELICAL SPRINGS -->
+            <g id="group-shaft" class="interactive-part" data-part="drive-shaft">
+              <!-- Rotary Shaft -->
+              <rect x="10" y="340" width="560" height="40" rx="6" fill="url(#shaft-grad)" stroke="#475569" stroke-width="2" />
+              <text x="25" y="365" class="fill-slate-900 font-bold text-xs">Shaft</text>
+              <!-- Left Shaft Rotation Indicator -->
+              <ellipse cx="20" cy="360" rx="14" ry="26" fill="none" stroke="#38bdf8" stroke-width="2.5" class="shaft-indicator" />
+              <polygon points="23,332 33,335 27,342" fill="#38bdf8" />
+              <!-- Helical Spring around Shaft -->
+              <g id="swashplate-spring" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round">
+                <path id="spring-path" d="M 140 335 L 155 385 L 170 335 L 185 385 L 200 335 L 215 385 L 230 335 L 245 385 L 260 335" />
+              </g>
+              <!-- Shaft Drive Hub / Collar -->
+              <rect id="shaft-hub" x="250" y="325" width="40" height="70" rx="4" fill="#64748b" stroke="#334155" stroke-width="2" />
+            </g>
+
+            <!-- TILTING SWASHPLATE (WOBBLE PLATE) WITH SLIPPER SHOES -->
+            <g id="group-swashplate" class="interactive-part" data-part="swashplate">
+              <!-- Slanted Heavy Steel Disc -->
+              <line id="swashplate-body" x1="330" y1="160" x2="210" y2="560" stroke="url(#swashplate-grad)" stroke-width="28" stroke-linecap="round" />
+              <line id="swashplate-spine" x1="330" y1="160" x2="210" y2="560" stroke="#f8fafc" stroke-width="3" stroke-linecap="round" />
+              <!-- Upper Clamped Slipper Shoe & Ball Joint -->
+              <rect id="shoe-top" x="306" y="166" width="28" height="28" rx="4" fill="#475569" stroke="#94a3b8" stroke-width="2" />
+              <circle id="swash-ball-top" cx="320" cy="180" r="12" fill="#cbd5e1" stroke="#334155" stroke-width="2" />
+              <line id="conn-rod-top" x1="320" y1="180" x2="380" y2="180" stroke="#cbd5e1" stroke-width="10" stroke-linecap="round" />
+              <!-- Lower Clamped Slipper Shoe & Ball Joint -->
+              <rect id="shoe-bottom" x="206" y="526" width="28" height="28" rx="4" fill="#475569" stroke="#94a3b8" stroke-width="2" />
+              <circle id="swash-ball-bottom" cx="220" cy="540" r="12" fill="#cbd5e1" stroke="#334155" stroke-width="2" />
+              <line id="conn-rod-bottom" x1="220" y1="540" x2="380" y2="540" stroke="#cbd5e1" stroke-width="10" stroke-linecap="round" />
+              <!-- Angle Scale Tag -->
+              <text id="angle-text" x="290" y="275" class="fill-amber-400 font-mono text-xs font-bold">α = 4.8°</text>
+            </g>
+
+            <!-- RECIPROCATING DUAL PISTONS -->
+            <!-- Top Piston -->
+            <g id="piston-top" class="interactive-part" data-part="piston-top">
+              <rect id="piston-top-body" x="380" y="145" width="180" height="80" rx="6" fill="url(#piston-grad)" stroke="#334155" stroke-width="2" />
+              <line id="piston-top-r1" x1="530" y1="145" x2="530" y2="225" stroke="#1e293b" stroke-width="3" />
+              <line id="piston-top-r2" x1="545" y1="145" x2="545" y2="225" stroke="#1e293b" stroke-width="3" />
+              <text id="piston-top-label" x="450" y="190" class="fill-slate-900 font-bold text-sm">Piston</text>
+              <circle id="piston-top-pocket" cx="380" cy="185" r="12" fill="#475569" stroke="#334155" stroke-width="2" />
+            </g>
+
+            <!-- Bottom Piston -->
+            <g id="piston-bottom" class="interactive-part" data-part="piston-bottom">
+              <rect id="piston-bottom-body" x="380" y="505" width="180" height="80" rx="6" fill="url(#piston-grad)" stroke="#334155" stroke-width="2" />
+              <line id="piston-bottom-r1" x1="530" y1="505" x2="530" y2="585" stroke="#1e293b" stroke-width="3" />
+              <line id="piston-bottom-r2" x1="545" y1="505" x2="545" y2="585" stroke="#1e293b" stroke-width="3" />
+              <text id="piston-bottom-label" x="450" y="550" class="fill-slate-900 font-bold text-sm">Piston</text>
+              <circle id="piston-bottom-pocket" cx="380" cy="545" r="12" fill="#475569" stroke="#334155" stroke-width="2" />
+            </g>
+
+            <!-- MINI INTEGRATED ECV ON COMPRESSOR BODY -->
+            <g id="mini-ecv" class="interactive-part" data-part="ecv-valve" transform="translate(760, 110)">
+              <rect x="0" y="30" width="60" height="180" rx="6" fill="#0f172a" stroke="#64748b" stroke-width="2" />
+              <!-- Electrical Connector -->
+              <path d="M 10 0 L 50 0 L 50 30 L 10 30 Z" fill="#334155" stroke="#f59e0b" stroke-width="1.5" />
+              <rect x="20" y="-8" width="6" height="8" fill="#f59e0b" />
+              <rect x="34" y="-8" width="6" height="8" fill="#f59e0b" />
+              <!-- Coil & Needle -->
+              <rect id="mini-ecv-coil" x="8" y="38" width="44" height="38" rx="3" fill="url(#copper-coil)" stroke="#d97706" stroke-width="1.5" />
+              <g id="mini-ecv-needle" transform="translate(0, 0)">
+                <rect x="24" y="80" width="12" height="55" rx="2" fill="#10b981" stroke="#059669" stroke-width="1.5" />
+                <polygon points="30,145 22,132 38,132" fill="#10b981" />
+              </g>
+              <text x="30" y="-18" text-anchor="middle" class="fill-slate-200 font-bold text-[10px]">Electronic Control</text>
+              <text x="30" y="-7" text-anchor="middle" class="fill-slate-200 font-bold text-[10px]">Valve Solenoid</text>
+              <text id="mini-ecv-status" x="30" y="225" text-anchor="middle" class="fill-amber-400 font-mono font-bold text-xs">(open)</text>
+            </g>
+
+
+            <!-- ============================================================ -->
+            <!-- SECTION B: DEDICATED HIGH-DEFINITION ECV CUTAWAY (RIGHT)     -->
+            <!-- ============================================================ -->
+            <g id="group-ecv-cutaway-panel" class="interactive-part" data-part="ecv-valve" transform="translate(1040, 40)">
+              <!-- Frame Border matching Reference Inset Box -->
+              <rect x="0" y="0" width="400" height="630" rx="16" fill="#0f172a" stroke="#38bdf8" stroke-width="2.5" />
+              
+              <!-- Inset Header Banner -->
+              <rect x="0" y="0" width="400" height="50" rx="16" fill="#1e293b" />
+              <rect x="0" y="30" width="400" height="20" fill="#1e293b" />
+              <text x="20" y="32" class="fill-white font-bold text-sm tracking-wide">ECV SOLENOID CUTAWAY INSET</text>
+              <rect id="ecv-panel-badge-bg" x="250" y="14" width="135" height="24" rx="6" fill="#f59e0b" fill-opacity="0.2" stroke="#f59e0b" stroke-width="1" />
+              <text id="ecv-panel-badge-txt" x="317" y="30" text-anchor="middle" class="fill-amber-400 font-mono font-bold text-[11px]">OPEN (BLEED Pc)</text>
+
+              <!-- Outer Valve Gray Body Manifold -->
+              <rect x="30" y="80" width="340" height="510" rx="10" fill="#334155" stroke="#64748b" stroke-width="2" />
+
+              <!-- Upper Crankcase Passage (Blue Cavity) -->
+              <rect x="50" y="290" width="300" height="65" fill="#38bdf8" fill-opacity="0.45" stroke="#0284c7" stroke-width="2" />
+              <text x="70" y="328" class="fill-sky-200 font-bold text-xs">Crankcase Channel (Pc)</text>
+
+              <!-- Lower Discharge Passage (Red Cavity) -->
+              <rect x="50" y="440" width="300" height="65" fill="#ef4444" fill-opacity="0.45" stroke="#f87171" stroke-width="2" />
+              <text x="70" y="478" class="fill-rose-200 font-bold text-xs">Discharge Passage (Pd)</text>
+
+              <!-- Vertical Bore Connecting Chambers -->
+              <rect x="160" y="240" width="80" height="300" fill="#0f172a" stroke="#475569" stroke-width="2" />
+
+              <!-- Electrical Solenoid Connector at Top -->
+              <path d="M 160 80 L 240 80 L 240 120 L 160 120 Z" fill="#1e293b" stroke="#f59e0b" stroke-width="2" />
+              <rect x="180" y="65" width="10" height="15" fill="#f59e0b" />
+              <rect x="210" y="65" width="10" height="15" fill="#f59e0b" />
+
+              <!-- Solenoid Copper Coil Windings -->
+              <rect id="ecv-large-coil" x="140" y="125" width="120" height="90" rx="4" fill="url(#copper-coil)" stroke="#d97706" stroke-width="2" />
+              <text x="200" y="175" text-anchor="middle" class="fill-slate-950 font-bold text-xs">PWM Solenoid</text>
+
+              <!-- Armature Return Spring -->
+              <path id="ecv-large-spring" d="M 180 140 L 220 145 L 180 155 L 220 165 L 180 175 L 220 185 L 200 195" fill="none" stroke="#f8fafc" stroke-width="3" />
+
+              <!-- Moveable Plunger & Green Spool Valve Assembly -->
+              <g id="ecv-large-spool" transform="translate(0, 0)">
+                <!-- Solenoid Plunger -->
+                <rect x="185" y="195" width="30" height="70" rx="3" fill="#94a3b8" stroke="#475569" stroke-width="2" />
+                <!-- Green Spool Body -->
+                <rect x="190" y="265" width="20" height="180" rx="4" fill="#10b981" stroke="#059669" stroke-width="2" />
+                <!-- Upper Sealing Land -->
+                <rect x="175" y="300" width="50" height="16" rx="3" fill="#10b981" stroke="#059669" stroke-width="2" />
+                <!-- Lower Sealing Land / Needle Tip -->
+                <polygon points="200,470 175,445 225,445" fill="#10b981" stroke="#059669" stroke-width="2" />
+              </g>
+
+              <!-- Dynamic High-Visibility Directional Flow Arrows in Cutaway -->
+              <g id="ecv-flow-arrows">
+                <!-- State 1 Flow: Discharge (Red) UP into Crankcase (Blue) -->
+                <path id="ecv-arr-path1" d="M 200 480 L 200 370 L 110 325" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" />
+                <polygon id="ecv-arr-head1" points="105,320 125,320 115,335" fill="#ffffff" />
+
+                <!-- State 2 Flow: Crankcase (Blue) LEFT/DOWN into Suction Bleed -->
+                <path id="ecv-arr-path2" d="M 110 325 L 200 325 L 200 270" fill="none" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" class="hidden" />
+                <polygon id="ecv-arr-head2" points="190,270 210,270 200,255" fill="#38bdf8" class="hidden" />
+              </g>
+
+              <!-- Live Inset Caption -->
+              <text id="ecv-cutaway-desc1" x="200" y="540" text-anchor="middle" class="fill-slate-200 font-medium text-xs">
+                Solenoid Off / Open: High-Pressure Pd
+              </text>
+              <text id="ecv-cutaway-desc2" x="200" y="560" text-anchor="middle" class="fill-amber-400 font-bold text-xs">
+                flows directly to Crankcase (Pc ↑)
+              </text>
+            </g>
+
+          </svg>
+
+          <!-- Real-Time Fluid Particle Simulation Canvas (Overlay) -->
+          <canvas id="particle-canvas" width="1480" height="720" class="absolute inset-0 w-full h-full pointer-events-none z-10"></canvas>
+
+        </div>
+
+        <!-- Synchronized Speech Subtitles & Step Player Banner -->
+        <div id="subtitles-banner" class="p-3.5 bg-slate-900/95 border-t border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-cyan-600 text-white font-mono font-bold flex items-center justify-center text-xs shadow-lg shadow-cyan-600/30 shrink-0">
+              <i data-lucide="radio" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-mono text-cyan-400 font-bold uppercase">AUDIO EXPLAINER SUBTITLES</span>
+                <span id="audio-step-num" class="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">STEP 1 OF 4</span>
+              </div>
+              <p id="subtitles-text" class="text-xs md:text-sm text-slate-200 font-medium mt-0.5">
+                In State 1, the Electronic Control Valve Solenoid is open. High-pressure discharge refrigerant enters the crankcase chamber.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0 self-end md:self-auto">
+            <button id="btn-sub-prev" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i> Prev</button>
+            <button id="btn-sub-next" class="px-3 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold flex items-center gap-1 shadow-md shadow-cyan-600/20">Next <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Comparison Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="glass-panel p-3.5 rounded-xl border border-slate-800 space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+            <h3 class="text-xs font-bold text-slate-200">(1) Electronic Control Valve Open (Destroked)</h3>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Discharge gas flows into the crankcase. High back-pressure ($P_c \approx P_d$) pushes the swashplate upright ($\alpha \approx 2^\circ-5^\circ$). Minimal piston travel prevents evaporator freeze-up and cuts engine parasitic load.
+          </p>
+        </div>
+        <div class="glass-panel p-3.5 rounded-xl border border-slate-800 space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+            <h3 class="text-xs font-bold text-slate-200">(2) Electronic Control Valve Closed (Full Stroke)</h3>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Discharge port is sealed. Crankcase gas vents to suction ($P_c \approx P_s$). Spring and cylinder forces tilt the swashplate to maximum angle ($\alpha \approx 20^\circ-22^\circ$), delivering 100% displacement for maximum cabin cooling.
+          </p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT SIDEBAR: SCADA TELEMETRY & PV INDICATOR DIAGRAM (3.5 Cols) -->
+    <aside class="xl:col-span-4 flex flex-col gap-4">
+      
+      <!-- Live SCADA Gauges -->
+      <div class="glass-panel rounded-2xl p-4 border border-slate-800 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <i data-lucide="activity" class="w-4 h-4 text-cyan-400"></i> Operating Telemetry
+          </h2>
+          <span id="load-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30">
+            5% DISPLACEMENT
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Swashplate Angle -->
+          <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+            <span class="text-[10px] text-slate-400 block font-medium">Swashplate Angle</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="gauge-angle" class="text-2xl font-black font-mono text-white">4.8</span>
+              <span class="text-xs font-mono text-amber-400">deg (°)</span>
+            </div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+              <div id="bar-angle" class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: 15%"></div>
+            </div>
+          </div>
+
+          <!-- Volumetric Displacement -->
+          <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+            <span class="text-[10px] text-slate-400 block font-medium">Displacement</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="gauge-disp" class="text-2xl font-black font-mono text-cyan-400">8.5</span>
+              <span class="text-xs font-mono text-cyan-400">cc/rev</span>
+            </div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+              <div id="bar-disp" class="bg-cyan-500 h-full rounded-full transition-all duration-300" style="width: 6%"></div>
+            </div>
+          </div>
+
+          <!-- Crankcase Pressure Pc -->
+          <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+            <span class="text-[10px] text-slate-400 block font-medium">Crankcase Press. (Pc)</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="gauge-pc" class="text-2xl font-black font-mono text-purple-400">12.4</span>
+              <span class="text-xs font-mono text-purple-400">bar</span>
+            </div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+              <div id="bar-pc" class="bg-purple-500 h-full rounded-full transition-all duration-300" style="width: 80%"></div>
+            </div>
+          </div>
+
+          <!-- Discharge Pressure Pd -->
+          <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+            <span class="text-[10px] text-slate-400 block font-medium">Discharge Press. (Pd)</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="gauge-pd" class="text-2xl font-black font-mono text-rose-400">14.8</span>
+              <span class="text-xs font-mono text-rose-400">bar</span>
+            </div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+              <div id="bar-pd" class="bg-rose-500 h-full rounded-full transition-all duration-300" style="width: 74%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cooling Output & Fuel Economy Row -->
+        <div class="grid grid-cols-2 gap-3 pt-1">
+          <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 block">Cooling Power</span>
+              <span id="gauge-cooling" class="text-base font-bold font-mono text-emerald-400">0.4 kW</span>
+            </div>
+            <i data-lucide="snowflake" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 block">Engine Fuel Draw</span>
+              <span id="gauge-fuel" class="text-base font-bold font-mono text-blue-400">MIN (0.15 L/h)</span>
+            </div>
+            <i data-lucide="zap" class="w-4 h-4 text-blue-400"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE PV INDICATOR DIAGRAM (Thermodynamic Cycle) -->
+      <div class="glass-panel rounded-2xl p-4 border border-slate-800 space-y-2">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <i data-lucide="line-chart" class="w-4 h-4 text-purple-400"></i> Live P-V Indicator Diagram
+          </h3>
+          <span class="text-[10px] font-mono text-slate-400">Polytropic γ = 1.15</span>
+        </div>
+        <canvas id="pv-canvas" width="340" height="150" class="w-full h-36 rounded-xl"></canvas>
+        <p class="text-[10px] text-slate-400 leading-tight">
+          Real-time in-cylinder pressure $P(\theta)$ plotted against volume $V(\theta)$. Area represents indicated work per revolution.
+        </p>
+      </div>
+
+      <!-- Variable Actuator Controls -->
+      <div class="glass-panel rounded-2xl p-4 border border-slate-800 space-y-4">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+          <i data-lucide="sliders" class="w-4 h-4 text-cyan-400"></i> Variable Actuator Controls
+        </h3>
+        
+        <!-- Solenoid Duty Cycle (PWM) -->
+        <div class="space-y-1.5">
+          <div class="flex justify-between text-xs">
+            <span class="text-slate-300 font-medium">ECV Solenoid PWM Duty Cycle</span>
+            <span id="label-pwm" class="font-mono text-cyan-400 font-bold">0% (De-energized)</span>
+          </div>
+          <input type="range" id="slider-pwm" min="0" max="100" value="0" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
+          <div class="flex justify-between text-[10px] font-mono text-slate-500">
+            <span>0% (Open / Min Load)</span>
+            <span>50%</span>
+            <span>100% (Closed / Max)</span>
+          </div>
+        </div>
+
+        <!-- Compressor Shaft RPM -->
+        <div class="space-y-1.5">
+          <div class="flex justify-between text-xs">
+            <span class="text-slate-300 font-medium">Compressor Shaft Speed</span>
+            <span id="label-rpm" class="font-mono text-blue-400 font-bold">1,800 RPM</span>
+          </div>
+          <input type="range" id="slider-rpm" min="600" max="4000" step="100" value="1800" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+        </div>
+
+        <!-- Cabin Cooling Demand -->
+        <div class="space-y-1.5">
+          <div class="flex justify-between text-xs">
+            <span class="text-slate-300 font-medium">Cabin Climate Demand Temp</span>
+            <span id="label-temp" class="font-mono text-emerald-400 font-bold">24.0 °C (Moderate)</span>
+          </div>
+          <input type="range" id="slider-temp" min="16" max="30" step="0.5" value="24" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
+        </div>
+      </div>
+
+      <!-- Component Inspector Drawer -->
+      <div id="inspector-card" class="glass-panel rounded-2xl p-4 border border-cyan-500/30 shadow-2xl relative space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <span id="insp-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+            COMPONENT INSPECTOR
+          </span>
+          <span id="insp-type-badge" class="text-[10px] font-mono text-slate-400">PWM SOLENOID</span>
+        </div>
+        <div>
+          <h3 id="insp-title" class="text-sm font-bold text-white">Electronic Control Valve Solenoid</h3>
+          <p id="insp-desc" class="text-xs text-slate-300 mt-1 leading-relaxed">
+            Electromagnetic proportional valve modulated by the Climate Control ECU. Regulates refrigerant flow from the discharge line into the crankcase cavity to continuously adjust swashplate tilt angle.
+          </p>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-mono bg-slate-900/80 p-2 rounded-xl border border-slate-800">
+          <div>
+            <span class="text-[10px] text-slate-500 block">Current Action</span>
+            <span id="insp-val-1" class="text-slate-200 font-semibold">Valve Open</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-500 block">Port Direction</span>
+            <span id="insp-val-2" class="text-rose-400 font-semibold">Pd → Crankcase</span>
+          </div>
+        </div>
+        <button id="btn-insp-action" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 text-xs font-semibold border border-slate-700 transition-all flex items-center justify-center gap-1.5">
+          <i data-lucide="play-circle" class="w-4 h-4"></i>
+          <span id="insp-action-label">Trigger 12V Solenoid Pulse</span>
+        </button>
+      </div>
+
+      <!-- Fault Injection Lab -->
+      <div class="glass-panel rounded-2xl p-4 border border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400"></i> Fault Injection Lab
+          </h3>
+          <button id="btn-clear-faults" class="text-[10px] text-slate-400 hover:text-white underline">Clear</button>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button data-fault="ecv-stuck-open" class="fault-btn p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left text-xs transition-all">
+            <span class="font-bold text-amber-400 block">ECV Stuck Open</span>
+            <span class="text-[10px] text-slate-400">No cooling; high Pc.</span>
+          </button>
+          <button data-fault="ecv-stuck-closed" class="fault-btn p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left text-xs transition-all">
+            <span class="font-bold text-cyan-400 block">ECV Stuck Closed</span>
+            <span class="text-[10px] text-slate-400">100% max stroke; ice.</span>
+          </button>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- KNOWLEDGE MASTERY QUIZ MODAL -->
+  <div id="quiz-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400"><i data-lucide="help-circle" class="w-5 h-5"></i></div>
+          <div>
+            <h2 class="text-base font-bold text-white">AC Compressor Control Valve Quiz</h2>
+            <p class="text-xs text-slate-400">Test your mastery of swashplate physics & valve gating</p>
+          </div>
+        </div>
+        <button id="btn-close-quiz" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div id="quiz-content" class="space-y-4"></div>
+      <div class="flex items-center justify-between pt-3 border-t border-slate-800 text-xs">
+        <span id="quiz-progress" class="font-mono text-slate-400">Question 1 of 5</span>
+        <button id="btn-quiz-next" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold flex items-center gap-1.5 shadow-lg shadow-cyan-600/30">
+          <span>Submit Answer</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) { lucide.createIcons(); }
+    });
+  </script>
+</body>
+</html>
