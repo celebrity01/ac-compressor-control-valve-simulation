@@ -1,0 +1,20 @@
+{
+  "name": "ac-compressor-control-valve-simulation",
+  "version": "1.0.0",
+  "description": "Interactive Motion & Audio Simulation of Variable Displacement Automotive AC Compressor with Electronic Control Valve (ECV)",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve ."
+  },
+  "keywords": [
+    "ac-compressor",
+    "automotive-engineering",
+    "swashplate",
+    "simulation",
+    "hvac",
+    "education",
+    "web-audio"
+  ],
+  "author": "SANI ZAHARADEEN",
+  "license": "MIT"
+}
